@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BT Payphone Closure Decisions</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@5.23.0/dist/maplibre-gl.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --ink: #18202a;
+        --muted: #5d6875;
+        --line: #d7dee6;
+        --panel: #ffffff;
+        --remove: #c93535;
+        --retain: #21824f;
+        --pending: #6b7280;
+      }
+
+      html,
+      body,
+      #map {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+        color: var(--ink);
+      }
+
+      .panel {
+        position: absolute;
+        z-index: 2;
+        top: 16px;
+        left: 16px;
+        width: min(380px, calc(100vw - 32px));
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 14px 40px rgb(24 32 42 / 0.18);
+      }
+
+      .panel__header {
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.25;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 12px;
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #f8fafc;
+        font-size: 13px;
+        font-weight: 650;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .toggle input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: currentColor;
+      }
+
+      .toggle--remove {
+        color: var(--remove);
+      }
+
+      .toggle--retain {
+        color: var(--retain);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-top: 1px solid var(--line);
+      }
+
+      .warning {
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--line);
+        color: #7a4b00;
+        background: #fff8e5;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .stat {
+        padding: 10px 12px;
+        border-right: 1px solid var(--line);
+      }
+
+      .stat:last-child {
+        border-right: 0;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 18px;
+        line-height: 1.15;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .popup {
+        min-width: 220px;
+        max-width: 300px;
+      }
+
+      .popup__address {
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 700;
+      }
+
+      .popup__decision {
+        display: inline-block;
+        margin: 10px 0 8px;
+        padding: 4px 7px;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .popup__decision--remove {
+        background: var(--remove);
+      }
+
+      .popup__decision--retain {
+        background: var(--retain);
+      }
+
+      .popup dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 5px 10px;
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .popup dt {
+        color: var(--muted);
+      }
+
+      .popup dd {
+        margin: 0;
+      }
+
+      .maplibregl-popup-content {
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgb(24 32 42 / 0.2);
+      }
+
+      @media (max-width: 680px) {
+        .panel {
+          top: 8px;
+          left: 8px;
+          width: calc(100vw - 16px);
+        }
+
+        .panel__header {
+          padding: 12px;
+        }
+
+        .filters {
+          padding: 8px;
+        }
+
+        .stats {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .stat {
+          padding: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="panel" aria-label="Payphone map controls">
+      <div class="panel__header">
+        <h1>BT Payphone Closure Decisions</h1>
+        <div class="meta">
+          <span>PDF dated 16 Apr 2026</span>
+          <span id="visible-count">Loading map data</span>
+        </div>
+      </div>
+      <div class="filters" aria-label="Decision filters">
+        <label class="toggle toggle--remove">
+          <input type="checkbox" value="Remove" checked />
+          <span>Remove</span>
+        </label>
+        <label class="toggle toggle--retain">
+          <input type="checkbox" value="Retain" checked />
+          <span>Retain</span>
+        </label>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <strong id="remove-count">0</strong>
+          <span>remove</span>
+        </div>
+        <div class="stat">
+          <strong id="retain-count">0</strong>
+          <span>retain</span>
+        </div>
+        <div class="stat">
+          <strong id="missing-count">0</strong>
+          <span>not mapped</span>
+        </div>
+      </div>
+      <div class="warning">
+        Warning: Geocoding based on postcode only, location will not always be accurate.
+      </div>
+    </aside>
+
+    <div id="map"></div>
+
+    <script>
+      const map = new maplibregl.Map({
+        container: "map",
+        style: "https://tiles.openfreemap.org/styles/liberty",
+        center: [-2.6, 54.6],
+        zoom: 5,
+        attributionControl: false,
+      });
+
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+
+      const selectedDecisions = new Set(["Remove", "Retain"]);
+      const visibleCount = document.querySelector("#visible-count");
+      const removeCount = document.querySelector("#remove-count");
+      const retainCount = document.querySelector("#retain-count");
+      const missingCount = document.querySelector("#missing-count");
+      let payphones = null;
+      let summary = null;
+
+      function makePin(color) {
+        const size = 48;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        ctx.shadowColor = "rgb(0 0 0 / 0.28)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 3;
+        ctx.beginPath();
+        ctx.moveTo(24, 44);
+        ctx.bezierCurveTo(18, 34, 9, 27, 9, 18);
+        ctx.arc(24, 18, 15, Math.PI, 0, false);
+        ctx.bezierCurveTo(39, 27, 30, 34, 24, 44);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.shadowColor = "transparent";
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(24, 18, 5, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        return {
+          width: size,
+          height: size,
+          data: ctx.getImageData(0, 0, size, size).data,
+        };
+      }
+
+      function decisionFilter() {
+        return ["in", ["get", "bt_final_decision"], ["literal", Array.from(selectedDecisions)]];
+      }
+
+      function updateFilter() {
+        if (!map.getLayer("payphone-pins")) return;
+        map.setFilter("payphone-pins", decisionFilter());
+        const shown = payphones.features.filter((feature) =>
+          selectedDecisions.has(feature.properties.bt_final_decision),
+        ).length;
+        visibleCount.textContent = `${shown.toLocaleString()} pins shown`;
+      }
+
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, (character) => {
+          const replacements = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          };
+          return replacements[character];
+        });
+      }
+
+      function popupHtml(properties) {
+        const decision = properties.bt_final_decision;
+        const decisionClass = decision.toLowerCase();
+        return `
+          <div class="popup">
+            <div class="popup__address">${escapeHtml(properties.address)}</div>
+            <div>${escapeHtml(properties.postcode)}</div>
+            <span class="popup__decision popup__decision--${decisionClass}">${escapeHtml(decision)}</span>
+            <dl>
+              <dt>Public body</dt><dd>${escapeHtml(properties.public_body)}</dd>
+              <dt>Proposal sent</dt><dd>${escapeHtml(properties.removal_proposal_sent)}</dd>
+              <dt>Initial decision</dt><dd>${escapeHtml(properties.bt_initial_decision)} ${escapeHtml(properties.bt_initial_decision_date)}</dd>
+              <dt>Final decision</dt><dd>${escapeHtml(properties.bt_final_decision_date)}</dd>
+            </dl>
+          </div>
+        `;
+      }
+
+      for (const checkbox of document.querySelectorAll(".filters input")) {
+        checkbox.addEventListener("change", (event) => {
+          if (event.target.checked) {
+            selectedDecisions.add(event.target.value);
+          } else {
+            selectedDecisions.delete(event.target.value);
+          }
+          updateFilter();
+        });
+      }
+
+      map.on("load", async () => {
+        map.addImage("pin-remove", makePin("#c93535"), { pixelRatio: 2 });
+        map.addImage("pin-retain", makePin("#21824f"), { pixelRatio: 2 });
+
+        const [geojsonResponse, summaryResponse] = await Promise.all([
+          fetch("data/payphones.geojson"),
+          fetch("data/summary.json"),
+        ]);
+        payphones = await geojsonResponse.json();
+        summary = await summaryResponse.json();
+
+        removeCount.textContent = summary.geocoded_final_decisions.Remove.toLocaleString();
+        retainCount.textContent = summary.geocoded_final_decisions.Retain.toLocaleString();
+        missingCount.textContent = summary.not_geocoded_rows.toLocaleString();
+
+        map.addSource("payphones", {
+          type: "geojson",
+          data: payphones,
+        });
+
+        map.addLayer({
+          id: "payphone-pins",
+          type: "symbol",
+          source: "payphones",
+          filter: decisionFilter(),
+          layout: {
+            "icon-image": [
+              "match",
+              ["get", "bt_final_decision"],
+              "Retain",
+              "pin-retain",
+              "pin-remove",
+            ],
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.42, 9, 0.65, 14, 0.9],
+            "icon-anchor": "bottom",
+            "icon-allow-overlap": true,
+          },
+        });
+
+        const bounds = new maplibregl.LngLatBounds();
+        for (const feature of payphones.features) {
+          if (["Remove", "Retain"].includes(feature.properties.bt_final_decision)) {
+            bounds.extend(feature.geometry.coordinates);
+          }
+        }
+        map.fitBounds(bounds, { padding: 44, duration: 0 });
+        updateFilter();
+      });
+
+      map.on("click", "payphone-pins", (event) => {
+        const feature = event.features[0];
+        new maplibregl.Popup({ offset: 28 })
+          .setLngLat(feature.geometry.coordinates)
+          .setHTML(popupHtml(feature.properties))
+          .addTo(map);
+      });
+
+      map.on("mouseenter", "payphone-pins", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      map.on("mouseleave", "payphone-pins", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    </script>
+  </body>
+</html>

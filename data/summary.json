@@ -1,0 +1,17 @@
+{
+  "final_decisions": {
+    "Pending": 5,
+    "Remove": 2854,
+    "Retain": 259
+  },
+  "geocoded_final_decisions": {
+    "Pending": 5,
+    "Remove": 2843,
+    "Retain": 259
+  },
+  "geocoded_rows": 3107,
+  "not_geocoded_rows": 11,
+  "source_pdf": "public-payphone-closures-16-4-26.pdf",
+  "source_pdf_date": "2026-04-16",
+  "total_rows": 3118
+}

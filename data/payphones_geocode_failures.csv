@@ -1,0 +1,12 @@
+id,address,postcode,public_body,removal_proposal_sent,public_body_representation_made,bt_initial_decision,bt_initial_decision_date,public_body_review_requested,bt_final_decision,bt_final_decision_date,latitude,longitude,geocoded_postcode,geocoding_status
+2,Junction Elmwood Newham Way Coulby Newham Middlesbrough,TS8 0TP,Middlesbrough (B),07/02/2023,No,Remove,09/05/2023,No,Remove,30/05/2023,,,,not_found
+319,Outside No 629 Armstrong Road Newcastle Upon Tyne,NE15 6AU,Newcastle upon Tyne District (B),22/08/2023,No,Remove,30/11/2023,No,Remove,30/11/2023,,,,not_found
+394,Outside The Post Office High Street Goring Reading,RG8 9AA,South Oxfordshire District,29/08/2023,Yes,Remove,07/02/2024,No,Remove,07/02/2024,,,,not_found
+404,Outside Post Office Newbottle Street Houghton Le Spring,DH4 4AA,Sunderland District (B),29/08/2023,No,Remove,22/01/2024,No,Remove,22/01/2024,,,,not_found
+445,Wordsworth Drive Taunton,TA1 2HJ,Taunton Deane District (B),31/08/2023,No,Remove,08/02/2024,No,Remove,08/02/2024,,,,not_found
+1140,Great Cheetham St Dudley St Salford,M6 4TW,Salford District (B),15/01/2025,No,Remove,15/01/2025,No,Remove,15/01/2025,,,,not_found
+1266,Opposite Junction Of Peterborough Road Carnwath Road London,SW6 3DS,Hammersmith and Fulham,02/02/2025,No,Remove,05/05/2025,No,Remove,05/05/2025,,,,not_found
+1446,The Clease Camelford,PL32 9PL,Cornwall,13/02/2025,Yes,Remove,15/05/2025,Yes,Remove,03/07/2025,,,,not_found
+1756,Outside Post Office Naughton Road Wormit Newport-On-Tay,DD6 8NF,Fife,04/03/2025,No,Remove,04/06/2025,No,Remove,04/06/2025,,,,not_found
+3080,Burley Wood Lane Kirkstall Hill Leeds,LS11 2SX,Leeds District (B),27/06/2025,No,Remove,27/06/2025,No,Remove,27/06/2025,,,,not_found
+3093,Longley Lane Near Sharston Rd Manchester,M22 4RA,Manchester District (B),24/11/2025,No,Remove,24/11/2025,No,Remove,24/11/2025,,,,not_found
